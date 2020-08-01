@@ -462,7 +462,6 @@ void imageFilterFFT2D1(QImage src, int r, int option, QImage &originalSpectrumIm
 }
 
 
-
 void fftshift2D(fftwf_complex *src, int w, int h, fftwf_complex *dst)
 {
     int i, j, ii, jj, c;

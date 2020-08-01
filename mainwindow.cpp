@@ -70,6 +70,12 @@ MainWindow::MainWindow()
 
     setWindowTitle(tr("DIP"));
     setUnifiedTitleAndToolBarOnMac(true);
+
+    this->installEventFilter(this);
+
+    translator.load(":/languages/zh_CN.qm");
+    qApp->installTranslator( &translator );
+    this->retranslate();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -358,8 +364,8 @@ MdiChild *MainWindow::createMdiChild()
 
 void MainWindow::createActions()
 {
-    QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
-    QToolBar *fileToolBar = addToolBar(tr("File"));
+    fileMenu = menuBar()->addMenu(tr("&File"));
+    fileToolBar = addToolBar(tr("File"));
 
     const QIcon newIcon = QIcon::fromTheme("document-new", QIcon(":/images/new.png"));
     newAct = new QAction(newIcon, tr("&New"), this);
@@ -370,7 +376,7 @@ void MainWindow::createActions()
     fileToolBar->addAction(newAct);
 
     const QIcon openIcon = QIcon::fromTheme("document-open", QIcon(":/images/open.png"));
-    QAction *openAct = new QAction(openIcon, tr("&Open..."), this);
+    openAct = new QAction(openIcon, tr("&Open..."), this);
     openAct->setShortcuts(QKeySequence::Open);
     openAct->setStatusTip(tr("Open an existing file"));
     connect(openAct, &QAction::triggered, this, &MainWindow::open);
@@ -393,7 +399,7 @@ void MainWindow::createActions()
 
     fileMenu->addSeparator();
 
-    QMenu *recentMenu = fileMenu->addMenu(tr("Recent..."));
+    recentMenu = fileMenu->addMenu(tr("Recent..."));
     connect(recentMenu, &QMenu::aboutToShow, this, &MainWindow::updateRecentFileActions);
     recentFileSubMenuAct = recentMenu->menuAction();
 
@@ -406,21 +412,21 @@ void MainWindow::createActions()
 
     setRecentFilesVisible(MainWindow::hasRecentFiles());
 
-    fileMenu->addAction(tr("Switch layout direction"), this, &MainWindow::switchLayoutDirection);
+    layoutAct = fileMenu->addAction(tr("Switch layout direction"), this, &MainWindow::switchLayoutDirection);
 
     fileMenu->addSeparator();
 
 //! [0]
     const QIcon exitIcon = QIcon::fromTheme("application-exit");
-    QAction *exitAct = fileMenu->addAction(exitIcon, tr("E&xit"), qApp, &QApplication::closeAllWindows);
+    exitAct = fileMenu->addAction(exitIcon, tr("E&xit"), qApp, &QApplication::closeAllWindows);
     exitAct->setShortcuts(QKeySequence::Quit);
     exitAct->setStatusTip(tr("Exit the application"));
     fileMenu->addAction(exitAct);
 //! [0]
 
 #ifndef QT_NO_CLIPBOARD
-    QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
-    QToolBar *editToolBar = addToolBar(tr("Edit"));
+    editMenu = menuBar()->addMenu(tr("&Edit"));
+    editToolBar = addToolBar(tr("Edit"));
 
     const QIcon copyIcon = QIcon::fromTheme("edit-copy", QIcon(":/images/copy.png"));
     copyAct = new QAction(copyIcon, tr("&Copy"), this);
@@ -558,15 +564,27 @@ void MainWindow::createActions()
     filterMenu = menuBar()->addMenu(tr("&Filter"));
     timeDomainAct = filterMenu->addAction(tr("Space Domain"), this, &MainWindow::spaceDomainFiltering);
     frequencyDomainAct = filterMenu->addAction(tr("Frequency Domain"), this, &MainWindow::frequencyDomainFiltering);
+    embossFilterAct = filterMenu->addAction(tr("Emboss Filter"), this, &MainWindow::embossFiltering);
 
     menuBar()->addSeparator();
 
-    QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
+    helpMenu = menuBar()->addMenu(tr("&Help"));
 
-    QAction *aboutAct = helpMenu->addAction(tr("&About"), this, &MainWindow::about);
+    languageMenu = helpMenu->addMenu(tr("&Language"));
+    // Chinese
+    zhCNAct = languageMenu->addAction(tr("&Chinese"));
+    languageMenu->addAction(zhCNAct);
+    connect(zhCNAct, &QAction::triggered, this, &MainWindow::switchLanguage);
+
+    // English
+    enUSAct = languageMenu->addAction(tr("&English"));
+    languageMenu->addAction(enUSAct);
+    connect(enUSAct, &QAction::triggered, this, &MainWindow::switchLanguage);
+
+    aboutAct = helpMenu->addAction(tr("&About"), this, &MainWindow::about);
     aboutAct->setStatusTip(tr("Show the application's About box"));
 
-    QAction *aboutQtAct = helpMenu->addAction(tr("About &Qt"), qApp, &QApplication::aboutQt);
+    aboutQtAct = helpMenu->addAction(tr("About &Qt"), qApp, &QApplication::aboutQt);
     aboutQtAct->setStatusTip(tr("Show the Qt library's About box"));
 }
 
@@ -957,4 +975,142 @@ void MainWindow::frequencyDomainFiltering()
 
         delete d;
     }
+}
+
+void MainWindow::embossFiltering()
+{
+    MdiChild * owner = activeMdiChild();
+    if (owner) {
+        QImage image = owner->image;
+
+        EmbossFilterDialog *d = new EmbossFilterDialog(image);
+        d->setWindowTitle(tr("Emboss Filtering"));
+        int ret = d->exec () ; // modal dialog
+        if (ret == QDialog::Accepted)
+        {
+            QImage newImage = d->getImage();
+            owner->setImage(newImage);
+        }
+
+        delete d;
+    }
+}
+
+void MainWindow::switchLanguage()
+{
+    QString languageFile;
+    if (this->sender() == zhCNAct) {
+        languageFile = ":/languages/zh_CN.qm";
+    } else if (this->sender() == enUSAct) {
+        languageFile = ":/languages/en_US.qm";
+    }
+    translator.load(languageFile);
+    qApp->installTranslator( &translator );
+    this->retranslate();
+}
+
+void MainWindow::retranslate()
+{
+    fileMenu->setTitle(tr("&File"));
+    //fileToolBar->setToolTip(tr("file"));
+    newAct->setText(tr("&New"));
+    newAct->setStatusTip(tr("Create a new file"));
+
+    openAct->setText(tr("&Open..."));
+    openAct->setStatusTip(tr("Open an existing file"));
+
+    saveAct->setText(tr("&Save"));
+    saveAct->setStatusTip(tr("Save the document to disk"));
+
+    saveAsAct->setText(tr("Save &As..."));
+    saveAsAct->setStatusTip(tr("Save the document under a new name"));
+
+    recentMenu->setTitle(tr("Recent..."));
+
+    layoutAct->setText(tr("Switch layout direction"));
+
+    exitAct->setText(tr("E&xit"));
+    exitAct->setStatusTip(tr("Exit the application"));
+    editMenu->setTitle(tr("&Edit"));
+    //editToolBar = addToolBar(tr("Edit"));
+
+    copyAct->setText(tr("&Copy"));
+    copyAct->setStatusTip(tr("Copy the current selection's contents to the "
+                             "clipboard"));
+
+    pasteAct->setText(tr("&Paste"));
+    pasteAct->setStatusTip(tr("Paste the clipboard's contents into the current "
+                              "selection"));
+
+    windowMenu->setTitle(tr("&Window"));
+
+    closeAct->setText(tr("Cl&ose"));
+    closeAct->setStatusTip(tr("Close the active window"));
+
+    closeAllAct->setText(tr("Close &All"));
+    closeAllAct->setStatusTip(tr("Close all the windows"));
+
+    viewModeAct->setText(tr("&Switch View Mode"));
+    viewModeAct->setStatusTip(tr("Switch View Mode"));
+
+    tileAct->setText(tr("&Tile"));
+    tileAct->setStatusTip(tr("Tile the windows"));
+
+    cascadeAct->setText(tr("&Cascade"));
+    cascadeAct->setStatusTip(tr("Cascade the windows"));
+
+    nextAct->setText(tr("Ne&xt"));
+    nextAct->setStatusTip(tr("Move the focus to the next window"));
+
+    previousAct->setText(tr("Pre&vious"));
+    previousAct->setStatusTip(tr("Move the focus to the previous "
+                                 "window"));
+
+    viewMenu->setTitle(tr("&View"));
+    zoomInAct->setText(tr("Zoom &In (25%)"));
+    zoomOutAct->setText(tr("Zoom &Out (25%)"));
+    normalSizeAct->setText(tr("&Normal Size"));
+    normalSizeAct->setShortcut(tr("Ctrl+S"));
+    fitToWindowAct->setText(tr("&Fit to Window"));
+    fitToWindowAct->setShortcut(tr("Ctrl+F"));
+    grayViewAct->setText(tr("Gray Image"));
+    spectrumViewAct->setText(tr("Spectrum"));
+
+    histViewMenu->setTitle(tr("Histogram"));
+    histViewYAct->setText(tr("Y"));
+    histViewRAct->setText(tr("R"));
+    histViewGAct->setText(tr("G"));
+    histViewBAct->setText(tr("B"));
+
+    negativeViewMenu->setTitle(tr("Negative"));
+    negativeViewAllAct->setText(tr("All"));
+    negativeViewRAct->setText(tr("R"));
+    negativeViewGAct->setText(tr("G"));
+    negativeViewBAct->setText(tr("B"));
+
+    pseudoColorViewMenu->setTitle(tr("PseudoColor"));
+    pseudoColorJetViewAct->setText(tr("Jet"));
+    pseudoColorParulaViewAct->setText(tr("Parula"));
+    pseudoColorHotViewAct->setText(tr("Hot"));
+
+    enhancementMenu->setTitle(tr("&Enhancement"));
+    convertGrayImageAct->setText(tr("Gray Image"));
+    equalizeHistogramAct->setText(tr("Hist Equalization"));
+    adaptiveContrastEnhancementAct->setText(tr("Adaptive Contrast Equalization"));
+
+    filterMenu->setTitle(tr("&Filter"));
+    timeDomainAct->setText(tr("Space Domain"));
+    frequencyDomainAct->setText(tr("Frequency Domain"));
+    embossFilterAct->setText(tr("Emboss Filter"));
+
+    helpMenu->setTitle(tr("&Help"));
+    languageMenu->setTitle(tr("&Language"));
+    zhCNAct->setText(tr("&Chinese"));
+    enUSAct->setText(tr("&English"));
+
+    aboutAct->setText(tr("&About"));
+    aboutAct->setStatusTip(tr("Show the application's About box"));
+
+    aboutQtAct->setText(tr("About &Qt"));
+    aboutQtAct->setStatusTip(tr("Show the Qt library's About box"));
 }

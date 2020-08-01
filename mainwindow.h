@@ -52,12 +52,14 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QTranslator>
 #include <mdiviewchild.h>
 #include <mdichild.h>
 #include "imageprocess.h"
 #include "acedialog.h"
 #include "fdfilterdialog.h"
 #include "sdfilterdialog.h"
+#include "embossfilterdialog.h"
 #include "transform.h"
 
 //class MdiChild;
@@ -67,6 +69,7 @@ class QAction;
 class QMenu;
 class QMdiArea;
 class QMdiSubWindow;
+class QTranslator;
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -112,6 +115,8 @@ private slots:
     void adaptiveContrastEnhancement();
     void spaceDomainFiltering();
     void frequencyDomainFiltering();
+    void embossFiltering();
+    void switchLanguage();
 
 private:
     enum { MaxRecentFiles = 5 };
@@ -127,6 +132,24 @@ private:
     void setRecentFilesVisible(bool visible);
     MdiChild *activeMdiChild() const;
     QMdiSubWindow *findMdiViewChild(MdiChild *owner, const QString &fileName) const;
+    void retranslate();
+
+    QMenu *fileMenu;
+    QToolBar *fileToolBar;
+    QAction *openAct;
+    QMenu *recentMenu;
+    QAction *layoutAct;
+    QAction *exitAct;
+    QMenu *editMenu;
+    QToolBar *editToolBar;
+
+    QTranslator translator;
+    QMenu *helpMenu;
+    QMenu *languageMenu;
+    QAction *zhCNAct;
+    QAction *enUSAct;
+    QAction *aboutAct;
+    QAction *aboutQtAct;
 
     QMdiArea *mdiArea;
 
@@ -181,6 +204,7 @@ private:
     QMenu *filterMenu;
     QAction *timeDomainAct;
     QAction *frequencyDomainAct;
+    QAction *embossFilterAct;
 };
 
 #endif

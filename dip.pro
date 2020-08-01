@@ -5,6 +5,7 @@ QMAKE_CXXFLAGS+= -openmp
 
 HEADERS       = mainwindow.h \
                 acedialog.h \
+                embossfilterdialog.h \
                 fdfilterdialog.h \
                 fftw3.h \
                 floatslider.h \
@@ -15,6 +16,7 @@ HEADERS       = mainwindow.h \
                 transform.h
 SOURCES       = main.cpp \
                 acedialog.cpp \
+                embossfilterdialog.cpp \
                 fdfilterdialog.cpp \
                 imagepocess.cpp \
                 mainwindow.cpp \
@@ -33,3 +35,6 @@ win32: LIBS += -L$$PWD/./ -llibfftw3-3 -llibfftw3f-3 -llibfftw3l-3
 
 INCLUDEPATH += $$PWD/.
 DEPENDPATH += $$PWD/.
+
+TRANSLATIONS += $$PWD/languages/zh_CN.ts \
+               $$PWD/languages/en_US.ts

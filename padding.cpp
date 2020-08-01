@@ -98,7 +98,7 @@ void copyMakeConstBorder( const uchar* src, int w, int h,
                              int top, int left, int cn, const uchar *value )
 {
     int i, j;
-    uchar* constBuf = new uchar[nw*cn];
+    uchar* constBuf = new uchar[nw*cn]; //calloc, malloc -> free
     int right = nw - w - left;
     int bottom = nh - h - top;
 

@@ -35,6 +35,7 @@ float laplacian8[9] = {
     1,-8,1,
     1, 1,1};
 
+
 float logElement(int x, int y, float sigma)
 {
     //const float PI = 3.141592653589793f;
@@ -74,7 +75,7 @@ float *generateLOGKernel(float sigma, int &kernelSize)
     return LOGKernel;
 }
 
-void filterProc(const uchar *src, int w, int h,
+static void filterProc(const uchar *src, int w, int h,
             const float *kernel, int hkw, int hkh, uchar *dst)
 {
     int i, j, m, n;
@@ -302,6 +303,7 @@ void SDFilterDialog::iniUI()
 
     LOGImageLabel = new QLabel();
     LOGImageLabel->setAlignment(Qt::AlignCenter);
+    LOGImageLabel->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
     //paddedImageLabel = new QLabel();
     //paddedImageLabel->setAlignment(Qt::AlignCenter);
     //filteredSpectrumImageLabel = new QLabel();

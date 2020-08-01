@@ -1,5 +1,5 @@
-#ifndef TDFILTERDIALOG_H
-#define TDFILTERDIALOG_H
+#ifndef SDFILTERDIALOG_H
+#define SDFILTERDIALOG_H
 
 #include <QObject>
 #include <QDialog>
